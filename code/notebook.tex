@@ -141,7 +141,7 @@
     \def\gt{>}
     \def\lt{<}
     % Document parameters
-    \title{Project\_1}
+    \title{Coffee+Third+Pass}
     
     
     
@@ -280,224 +280,669 @@
     
 
     
-    \hypertarget{project-1}{%
-\section{Project 1}\label{project-1}}
+    \hypertarget{olins-coffee-cooling-problem}{%
+\section{Olin's Coffee Cooling
+Problem}\label{olins-coffee-cooling-problem}}
 
-\textbf{\emph{By: Sam Daitzman and Mary Fung}}
-
-    \hypertarget{question}{%
-\subsubsection{Question}\label{question}}
-
-Looking at data for the Yellowstone reintroduced wolf population, what
-were the chances that the Yellowstone Wolf Project would fail?
-
-    \hypertarget{approach}{%
-\subsubsection{Approach}\label{approach}}
-
-We'll model the initial explosion in wolf population at Yellowstone
-using a logistic or proportional population growth model. When we have a
-model that matches the initial growth and slowing of growth, we'll
-simulate the initial introduction and population changes a large number
-of times. In some of these simulations, the wolf population will die off
-before reaching a carrying/significant population. We'll keep track of
-the percentage of simulations in which this happens. This will represent
-the percentage chance of failure according to our model.
-
-\emph{OPTIONAL:} We could do a parameter sweep of this simulation to
-figure out if Yellowstone could have achieved likely-similar outcomes
-with fewer introduced wolves, or increased reliability by introducing
-more wolves.
+\hypertarget{by-theo-johnson-and-mary-fung}{%
+\paragraph{By: Theo Johnson and Mary
+Fung}\label{by-theo-johnson-and-mary-fung}}
 
     \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}2}]:} \PY{c+c1}{\PYZsh{} Configure Jupyter so figures appear in the notebook}
+{\color{incolor}In [{\color{incolor}1}]:} \PY{c+c1}{\PYZsh{} Configure Jupyter so figures appear in the notebook}
         \PY{o}{\PYZpc{}}\PY{k}{matplotlib} inline
         
         \PY{c+c1}{\PYZsh{} Configure Jupyter to display the assigned value after an assignment}
         \PY{o}{\PYZpc{}}\PY{k}{config} InteractiveShell.ast\PYZus{}node\PYZus{}interactivity=\PYZsq{}last\PYZus{}expr\PYZus{}or\PYZus{}assign\PYZsq{}
         
-        \PY{c+c1}{\PYZsh{} import functions that let us model, simulate and read data}
+        \PY{c+c1}{\PYZsh{} import functions from the modsim.py module}
         \PY{k+kn}{from} \PY{n+nn}{modsim} \PY{k}{import} \PY{o}{*}
-        \PY{k+kn}{from} \PY{n+nn}{pandas} \PY{k}{import} \PY{n}{read\PYZus{}html}\PY{p}{,} \PY{n}{read\PYZus{}csv}
 \end{Verbatim}
 
 
+    \hypertarget{background}{%
+\subsubsection{Background}\label{background}}
+
+Picture this, it's a Thursday evening and ModSim is just wrapping up.
+Before you leave, your teacher announces that the next class will start
+in the Nord where the teaching team will spend an hour introducing the
+next topic. By now, it's not uncommon for any of the first-year courses,
+such as DesNat or ModSim, to meet in the Nord heading to the AC for time
+in the studios. If only it weren't so cold in the Nord.
+
+    Last time this happened, you were already tired and low on energy when
+you got to the AC. Fortunately, you had made some coffee before heading
+to class. Unfortunately, the colder air in the Nord and the frigid
+weather outside have cooled your coffee more than you expected. This
+time however, you're more prepared.
+
+    \hypertarget{question}{%
+\subsection{Question}\label{question}}
+
+How warm should you make your coffee, knowing that you aren't going to
+drink it until you get to the AC and that you'll be in the Nord for an
+hour beforehand, and instead of making your coffee hotter, could you
+change the \emph{k} value to get the same results?
+
+    \hypertarget{method}{%
+\subsection{Method}\label{method}}
+
+Using the coffee cooling model in the Chapter 15 and 16 notebooks, we
+created our initial model with a set initial coffee temperature of 90
+degrees Celsius, we'll sweep the initial temperature once we have a
+working model.
+
+    \hypertarget{creating-a-model}{%
+\subsubsection{Creating a Model}\label{creating-a-model}}
+
+First things first, let's make our system.
+
+Our system parameters include the initial temperature, the volume of
+coffee (in mL), the \emph{k} value (for now let's assume 0.01), the
+environment temperatures (here's where it gets complicated), the ending
+time (in minutes), and the time step size (also in minutes).
+
+Now, we also have to set the different temperatures for different times.
+Assuming you leave the Dining Hall 3 minutes after making your coffee,
+walk outside for 1 minute before arriving in the Nord, stay in the Nord
+for an hour, walk outside for 3 minutes to the AC, and take 5 minutes to
+settle down before drinking your coffee, the code looks like the
+following.
+
     \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}80}]:} \PY{c+c1}{\PYZsh{} imports wolf population data}
-         \PY{n}{wolfData} \PY{o}{=} \PY{n}{read\PYZus{}csv}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{data/wolves.csv}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{index\PYZus{}col}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
-         \PY{n}{wolves} \PY{o}{=} \PY{n}{wolfData}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{YNP Wolves}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}
+{\color{incolor}In [{\color{incolor}2}]:} \PY{n}{init} \PY{o}{=} \PY{n}{State}\PY{p}{(}\PY{n}{T}\PY{o}{=}\PY{l+m+mi}{90}\PY{p}{)} \PY{c+c1}{\PYZsh{}all temps in in C}
+        \PY{n}{coffee} \PY{o}{=} \PY{n}{System}\PY{p}{(}\PY{n}{init}\PY{o}{=}\PY{n}{init}\PY{p}{,}
+                        \PY{n}{volume}\PY{o}{=}\PY{l+m+mi}{200}\PY{p}{,} \PY{c+c1}{\PYZsh{}ml}
+                        \PY{n}{k}\PY{o}{=}\PY{l+m+mf}{0.033}\PY{p}{,}
+                        \PY{n}{t\PYZus{}end}\PY{o}{=}\PY{l+m+mi}{68}\PY{p}{,}
+                        \PY{n}{dt}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}
+        \PY{c+c1}{\PYZsh{}Set values vol, k, time, step size}
 \end{Verbatim}
 
 
 \begin{Verbatim}[commandchars=\\\{\}]
-{\color{outcolor}Out[{\color{outcolor}80}]:} Year
-         1995     21
-         1996     52
-         1997     86
-         1998    112
-         1999    118
-         2000    119
-         2001    132
-         2002    148
-         2003    174
-         2004    171
-         2005    118
-         2006    136
-         2007    171
-         2008    124
-         2009     96
-         2010     97
-         2011     98
-         2012     83
-         2013     95
-         2014    104
-         2015     98
-         2016    108
-         Name: YNP Wolves, dtype: int64
+{\color{outcolor}Out[{\color{outcolor}2}]:} init      T    90
+        dtype: int64
+        volume                     200
+        k                        0.033
+        t\_end                       68
+        dt                           1
+        dtype: object
 \end{Verbatim}
             
     \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}34}]:} \PY{k}{def} \PY{n+nf}{plot\PYZus{}results}\PY{p}{(}\PY{n}{timeseries}\PY{p}{,} \PY{n}{title}\PY{p}{)}\PY{p}{:}
-             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Plot the estimates and the model.}
+{\color{incolor}In [{\color{incolor}3}]:} \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Temperature in the Dining Hall was about 73 degrees F\PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n}{T\PYZus{}env} \PY{o}{=} \PY{l+m+mf}{22.78}
+        
+            
+        \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Temperature outside in the end of October was 53 degrees F on average\PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n}{T\PYZus{}env} \PY{o}{=} \PY{l+m+mf}{11.67}
+          
+            
+        \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{,}\PY{l+m+mi}{62}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Temperature in the Nord was about 68 degrees F\PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n}{T\PYZus{}env} \PY{o}{=} \PY{l+m+mi}{20}
+         
+            
+        \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{62}\PY{p}{,}\PY{l+m+mi}{63}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Temperature outside\PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n}{T\PYZus{}env} \PY{o}{=} \PY{l+m+mf}{11.67}
+          
+            
+        \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{63}\PY{p}{,}\PY{l+m+mi}{68}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Temperature in the AC was about 70 degrees F\PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n}{T\PYZus{}env} \PY{o}{=} \PY{l+m+mf}{21.11}
+            
+        \PY{c+c1}{\PYZsh{}set external temps in each time frame, timeframes in order:}
+        \PY{c+c1}{\PYZsh{} DH, outside, Nord, outside, AC}
+\end{Verbatim}
+
+
+    Newton's Law of Cooling represents our differential equation of our
+stock-and-flow diagram, we'll store that in our update function.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}4}]:} \PY{k}{def} \PY{n+nf}{update\PYZus{}func}\PY{p}{(}\PY{n}{state}\PY{p}{,} \PY{n}{t}\PY{p}{,} \PY{n}{system}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Update the thermal transfer model.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    state: State (temperature in degrees Celsius)}
+        \PY{l+s+sd}{    t: time in minutes}
+        \PY{l+s+sd}{    system: System object}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    returns: State (temperature)}
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n}{unpack}\PY{p}{(}\PY{n}{system}\PY{p}{)}
+            
+            \PY{n}{T} \PY{o}{=} \PY{n}{state}\PY{o}{.}\PY{n}{T}
+            \PY{n}{T} \PY{o}{+}\PY{o}{=} \PY{o}{\PYZhy{}}\PY{n}{k} \PY{o}{*} \PY{p}{(}\PY{n}{T} \PY{o}{\PYZhy{}} \PY{n}{T\PYZus{}env}\PY{p}{)} \PY{o}{*} \PY{n}{dt}
+            \PY{c+c1}{\PYZsh{}Gets the temperature from State}
+            \PY{c+c1}{\PYZsh{}Adds the change in temperature}
+            \PY{c+c1}{\PYZsh{}Returns the new temperature to State}
+            \PY{k}{return} \PY{n}{State}\PY{p}{(}\PY{n}{T}\PY{o}{=}\PY{n}{T}\PY{p}{)}
+        
+        \PY{c+c1}{\PYZsh{}Differential equation from Newton\PYZsq{}s law of Cooling}
+        \PY{c+c1}{\PYZsh{}T=init temp, k=set value from cup, T\PYZus{}env = external temp, dt= step size}
+\end{Verbatim}
+
+
+    Let's see if it works:
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}5}]:} \PY{n}{update\PYZus{}func}\PY{p}{(}\PY{n}{init}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{,} \PY{n}{coffee}\PY{p}{)}
+        \PY{c+c1}{\PYZsh{}first step to test function}
+\end{Verbatim}
+
+
+\begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}5}]:} T    87.72663
+        dtype: float64
+\end{Verbatim}
+            
+    Now our run simulation function:
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}6}]:} \PY{k}{def} \PY{n+nf}{run\PYZus{}simulation}\PY{p}{(}\PY{n}{system}\PY{p}{,} \PY{n}{update\PYZus{}func}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Runs a simulation of the system.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Add a TimeFrame to the System: results}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    system: System object}
+        \PY{l+s+sd}{    update\PYZus{}func: function that updates state}
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n}{unpack}\PY{p}{(}\PY{n}{system}\PY{p}{)}
+            
+            \PY{n}{frame} \PY{o}{=} \PY{n}{TimeFrame}\PY{p}{(}\PY{n}{columns}\PY{o}{=}\PY{n}{init}\PY{o}{.}\PY{n}{index}\PY{p}{)}
+            \PY{n}{frame}\PY{o}{.}\PY{n}{row}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{=} \PY{n}{init}
+            \PY{n}{ts} \PY{o}{=} \PY{n}{linrange}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{t\PYZus{}end}\PY{p}{,} \PY{n}{dt}\PY{p}{)}
+            
+            \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n}{ts}\PY{p}{:}
+                \PY{n}{frame}\PY{o}{.}\PY{n}{row}\PY{p}{[}\PY{n}{t}\PY{o}{+}\PY{n}{dt}\PY{p}{]} \PY{o}{=} \PY{n}{update\PYZus{}func}\PY{p}{(}\PY{n}{frame}\PY{o}{.}\PY{n}{row}\PY{p}{[}\PY{n}{t}\PY{p}{]}\PY{p}{,} \PY{n}{t}\PY{p}{,} \PY{n}{system}\PY{p}{)}
+                
+            \PY{c+c1}{\PYZsh{} store the final temperature in T\PYZus{}final}
+            \PY{n}{system}\PY{o}{.}\PY{n}{T\PYZus{}final} \PY{o}{=} \PY{n}{get\PYZus{}last\PYZus{}value}\PY{p}{(}\PY{n}{frame}\PY{o}{.}\PY{n}{T}\PY{p}{)}
+            
+            \PY{k}{return} \PY{n}{frame}
+\end{Verbatim}
+
+
+    To put it all together:
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}7}]:} \PY{n}{results} \PY{o}{=} \PY{n}{run\PYZus{}simulation}\PY{p}{(}\PY{n}{coffee}\PY{p}{,} \PY{n}{update\PYZus{}func}\PY{p}{)}
+\end{Verbatim}
+
+
+\begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}7}]:}           T
+        0        90
+        1   87.7266
+        2   85.5283
+        3   83.4025
+        4   81.3468
+        5    79.359
+        6   77.4368
+        7    75.578
+        8   73.7806
+        9   72.0424
+        10  70.3617
+        11  68.7364
+        12  67.1647
+        13  65.6449
+        14  64.1752
+        15  62.7541
+        16  61.3798
+        17  60.0509
+        18  58.7659
+        19  57.5232
+        20  56.3216
+        21  55.1596
+        22   54.036
+        23  52.9494
+        24  51.8987
+        25  50.8827
+        26  49.9002
+        27  48.9501
+        28  48.0314
+        29   47.143
+        ..      {\ldots}
+        39  39.7218
+        40  39.1076
+        41  38.5137
+        42  37.9394
+        43   37.384
+        44   36.847
+        45  36.3276
+        46  35.8255
+        47  35.3399
+        48  34.8703
+        49  34.4162
+        50  33.9771
+        51  33.5525
+        52  33.1419
+        53  32.7448
+        54  32.3609
+        55  31.9896
+        56  31.6306
+        57  31.2834
+        58  30.9477
+        59   30.623
+        60  30.3091
+        61  30.0055
+        62   29.712
+        63  29.4281
+        64  29.1536
+        65  28.8882
+        66  28.6315
+        67  28.3833
+        68  28.1433
+        
+        [69 rows x 1 columns]
+\end{Verbatim}
+            
+    As a graph, it's easier to see the change in temperature that occurs.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}8}]:} \PY{n}{plot}\PY{p}{(}\PY{n}{results}\PY{o}{.}\PY{n}{T}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{coffee}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{decorate}\PY{p}{(}\PY{n}{xlabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Time (minutes)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                 \PY{n}{ylabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Temperature (C)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{c+c1}{\PYZsh{}results of k value= .033 (Olin coffee cup)}
+        \PY{c+c1}{\PYZsh{}and T=70 (reccomended serving heat of coffee)}
+\end{Verbatim}
+
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_18_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    From here, we can collect the final temperature of the coffee.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}9}]:} \PY{n}{coffee}\PY{o}{.}\PY{n}{T\PYZus{}final}
+        \PY{c+c1}{\PYZsh{}final temp of coffee with Olin values}
+\end{Verbatim}
+
+
+\begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}9}]:} 28.143255951829225
+\end{Verbatim}
+            
+    \hypertarget{results-1}{%
+\subsection{Results 1}\label{results-1}}
+
+This is the skeleton of our model. As shown in the graph, the
+temperature of the coffee continuously decreases, nearing the
+temperature of the environment. It should be noted that no largely
+noticeable difference in the temperature drop based on the change in
+location can be seen. This is likely due to the fact that the
+temperature of the coffee is much greater than the surrounding
+environment, any change in rate is hard to see compared to the overall
+decrease in temperature.
+
+However, as it stands, the final temperature of our coffee, is 26
+degrees Celsius (78.8 degrees Fahrenheit). This is rather cold, so we
+will be attempting to raise the final temperature by changing both
+\texttt{T\_init} and \texttt{k}.
+
+    \hypertarget{cleaning-up-the-code}{%
+\subsubsection{Cleaning up the code}\label{cleaning-up-the-code}}
+
+Before we can move on, we should clean up our code. This will make it
+easier moving forward. To do this, we used a make system function to
+store our parameters.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}10}]:} \PY{k}{def} \PY{n+nf}{make\PYZus{}system}\PY{p}{(}\PY{n}{T\PYZus{}init}\PY{p}{,} \PY{n}{k}\PY{p}{,} \PY{n}{volume}\PY{p}{,} \PY{n}{t\PYZus{}end}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Makes a System object with the given parameters.}
+         
+         \PY{l+s+sd}{    T\PYZus{}init: initial temperature in degC}
+         \PY{l+s+sd}{    r: heat transfer rate, in 1/min}
+         \PY{l+s+sd}{    volume: volume of liquid in mL}
+         \PY{l+s+sd}{    t\PYZus{}end: end time of simulation}
          \PY{l+s+sd}{    }
-         \PY{l+s+sd}{    census: TimeSeries of population estimates}
-         \PY{l+s+sd}{    un: TimeSeries of population estimates}
-         \PY{l+s+sd}{    timeseries: TimeSeries of simulation results}
-         \PY{l+s+sd}{    title: string}
+         \PY{l+s+sd}{    returns: System object}
          \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
-             \PY{n}{plot}\PY{p}{(}\PY{n}{timeseries}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{gray}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{model}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+             \PY{n}{init} \PY{o}{=} \PY{n}{State}\PY{p}{(}\PY{n}{T}\PY{o}{=}\PY{n}{T\PYZus{}init}\PY{p}{)}
              
-             \PY{n}{decorate}\PY{p}{(}\PY{n}{xlabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Year}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} 
-                      \PY{n}{ylabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Wolf population}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
-                      \PY{n}{title}\PY{o}{=}\PY{n}{title}\PY{p}{)}
-\end{Verbatim}
-
-
-    \hypertarget{historical-wolf-population-at-yellowstone}{%
-\subsubsection{Historical Wolf Population at
-Yellowstone}\label{historical-wolf-population-at-yellowstone}}
-
-    \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}155}]:} \PY{n}{plot}\PY{p}{(}\PY{n}{wolves}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZhy{}\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Wolves}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-          \PY{n}{decorate}\PY{p}{(}\PY{n}{xlabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Year}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
-              \PY{n}{ylabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Population (wolves)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
-              \PY{n}{title}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Yellowstone Wolf Population}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-\end{Verbatim}
-
-
-    \begin{center}
-    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_7_0.png}
-    \end{center}
-    { \hspace*{\fill} \\}
-    
-    \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}100}]:} \PY{n}{t\PYZus{}0} \PY{o}{=} \PY{n}{get\PYZus{}first\PYZus{}label}\PY{p}{(}\PY{n}{wolves}\PY{p}{)}
-          \PY{n}{t\PYZus{}end} \PY{o}{=} \PY{n}{get\PYZus{}last\PYZus{}label}\PY{p}{(}\PY{n}{wolves}\PY{p}{)}
-          \PY{n}{p\PYZus{}0} \PY{o}{=} \PY{n}{get\PYZus{}first\PYZus{}value}\PY{p}{(}\PY{n}{wolves}\PY{p}{)}\PY{p}{;}
-\end{Verbatim}
-
-
-    \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}29}]:} \PY{k}{def} \PY{n+nf}{run\PYZus{}simulation}\PY{p}{(}\PY{n}{system}\PY{p}{,} \PY{n}{update\PYZus{}func}\PY{p}{)}\PY{p}{:}
-             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Simulate the system using any update function.}
-         \PY{l+s+sd}{    }
-         \PY{l+s+sd}{    system: System object}
-         \PY{l+s+sd}{    update\PYZus{}func: function that computes the population next year}
-         \PY{l+s+sd}{    }
-         \PY{l+s+sd}{    returns: TimeSeries}
-         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
-             \PY{n}{results} \PY{o}{=} \PY{n}{TimeSeries}\PY{p}{(}\PY{p}{)}
-             \PY{n}{results}\PY{p}{[}\PY{n}{system}\PY{o}{.}\PY{n}{t\PYZus{}0}\PY{p}{]} \PY{o}{=} \PY{n}{system}\PY{o}{.}\PY{n}{p\PYZus{}0}
+             \PY{c+c1}{\PYZsh{} T\PYZus{}final is used to store the final temperature.}
+             \PY{c+c1}{\PYZsh{} Before the simulation runs, T\PYZus{}final = T\PYZus{}init}
+             \PY{n}{T\PYZus{}final} \PY{o}{=} \PY{n}{T\PYZus{}init}
              
-             \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n}{linrange}\PY{p}{(}\PY{n}{system}\PY{o}{.}\PY{n}{t\PYZus{}0}\PY{p}{,} \PY{n}{system}\PY{o}{.}\PY{n}{t\PYZus{}end}\PY{p}{)}\PY{p}{:}
-                 \PY{n}{results}\PY{p}{[}\PY{n}{t}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{]} \PY{o}{=} \PY{n}{update\PYZus{}func}\PY{p}{(}\PY{n}{results}\PY{p}{[}\PY{n}{t}\PY{p}{]}\PY{p}{,} \PY{n}{t}\PY{p}{,} \PY{n}{system}\PY{p}{)}
-                 
-             \PY{k}{return} \PY{n}{results}
+             \PY{c+c1}{\PYZsh{}T\PYZus{}env changes bsed on the location which corresponds to time}
+             \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{:}
+                 \PY{n}{T\PYZus{}env} \PY{o}{=} \PY{l+m+mf}{22.78}
+         
+         
+             \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{:}
+                 \PY{n}{T\PYZus{}env} \PY{o}{=} \PY{l+m+mf}{11.67}
+         
+         
+             \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{,}\PY{l+m+mi}{62}\PY{p}{)}\PY{p}{:}
+                 \PY{n}{T\PYZus{}env} \PY{o}{=} \PY{l+m+mi}{20}
+         
+         
+             \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{62}\PY{p}{,}\PY{l+m+mi}{63}\PY{p}{)}\PY{p}{:}
+                 \PY{n}{T\PYZus{}env} \PY{o}{=} \PY{l+m+mf}{11.67}
+         
+         
+             \PY{k}{for} \PY{n}{t} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{63}\PY{p}{,}\PY{l+m+mi}{68}\PY{p}{)}\PY{p}{:}
+                 \PY{n}{T\PYZus{}env} \PY{o}{=} \PY{l+m+mf}{21.11}
+             \PY{n}{dt} \PY{o}{=} \PY{l+m+mi}{1}
+                         
+             \PY{k}{return} \PY{n}{System}\PY{p}{(}\PY{n+nb}{locals}\PY{p}{(}\PY{p}{)}\PY{p}{)}
 \end{Verbatim}
 
 
+    Running the new code:
+
     \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}30}]:} \PY{k}{def} \PY{n+nf}{update\PYZus{}func\PYZus{}quad}\PY{p}{(}\PY{n}{pop}\PY{p}{,} \PY{n}{t}\PY{p}{,} \PY{n}{system}\PY{p}{)}\PY{p}{:}
-             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Update population based on a quadratic model.}
+{\color{incolor}In [{\color{incolor}11}]:} \PY{n}{coffee} \PY{o}{=} \PY{n}{make\PYZus{}system}\PY{p}{(}\PY{n}{T\PYZus{}init}\PY{o}{=}\PY{l+m+mi}{70}\PY{p}{,} \PY{n}{k}\PY{o}{=}\PY{l+m+mf}{0.033}\PY{p}{,} \PY{n}{volume}\PY{o}{=}\PY{l+m+mi}{200}\PY{p}{,} \PY{n}{t\PYZus{}end}\PY{o}{=}\PY{l+m+mi}{68}\PY{p}{)}
+         \PY{n}{results} \PY{o}{=} \PY{n}{run\PYZus{}simulation}\PY{p}{(}\PY{n}{coffee}\PY{p}{,} \PY{n}{update\PYZus{}func}\PY{p}{)}
+         \PY{n}{coffee}\PY{o}{.}\PY{n}{T\PYZus{}final}
+\end{Verbatim}
+
+
+\begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}11}]:} 26.101375867105983
+\end{Verbatim}
+            
+    And we can make it easier to get the final temperature by adding another
+function. This will be necessary when we get to sweeping our parameters.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}12}]:} \PY{k}{def} \PY{n+nf}{coffee\PYZus{}final}\PY{p}{(}\PY{n}{results}\PY{p}{)}\PY{p}{:}
+          
+             \PY{k}{return} \PY{n}{get\PYZus{}last\PYZus{}value}\PY{p}{(}\PY{n}{results}\PY{o}{.}\PY{n}{T}\PY{p}{)}
+\end{Verbatim}
+
+
+    \hypertarget{sweeping-parameters}{%
+\subsubsection{Sweeping parameters}\label{sweeping-parameters}}
+
+Now that we have our model, let's answer our question by sweeping for
+\texttt{T\_init} and \texttt{k}.
+
+    \hypertarget{sweeping-t_init}{%
+\paragraph{Sweeping T\_init}\label{sweeping-t_init}}
+
+To sweep our initial temperature, we'll loop an array into a function
+and return a SweepSeries object.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}13}]:} \PY{n}{T\PYZus{}array} \PY{o}{=} \PY{n}{linspace}\PY{p}{(}\PY{l+m+mi}{60}\PY{p}{,} \PY{l+m+mi}{100}\PY{p}{,} \PY{l+m+mi}{9}\PY{p}{)}
+\end{Verbatim}
+
+
+\begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}13}]:} array([ 60.,  65.,  70.,  75.,  80.,  85.,  90.,  95., 100.])
+\end{Verbatim}
+            
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}14}]:} \PY{k}{def} \PY{n+nf}{sweep\PYZus{}T}\PY{p}{(}\PY{n}{T\PYZus{}array}\PY{p}{,} \PY{n}{k}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Sweep a range of values for T\PYZus{}init.}
          \PY{l+s+sd}{    }
-         \PY{l+s+sd}{    pop: current population in billions}
-         \PY{l+s+sd}{    t: what year it is}
-         \PY{l+s+sd}{    system: system object with model parameters}
+         \PY{l+s+sd}{    T\PYZus{}array: array of T\PYZus{}init values}
+         \PY{l+s+sd}{    r: rate of heat transfer}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    returns: SweepSeries that maps from beta to total infected}
          \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
-             \PY{n}{net\PYZus{}growth} \PY{o}{=} \PY{n}{system}\PY{o}{.}\PY{n}{alpha} \PY{o}{*} \PY{n}{pop} \PY{o}{+} \PY{n}{system}\PY{o}{.}\PY{n}{beta} \PY{o}{*} \PY{n}{pop}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}
-             \PY{k}{return} \PY{n}{pop} \PY{o}{+} \PY{n}{net\PYZus{}growth}
+             \PY{n}{sweep} \PY{o}{=} \PY{n}{SweepSeries}\PY{p}{(}\PY{p}{)}
+             \PY{k}{for} \PY{n}{T\PYZus{}init} \PY{o+ow}{in} \PY{n}{T\PYZus{}array}\PY{p}{:}
+                 \PY{n}{coffee} \PY{o}{=} \PY{n}{make\PYZus{}system}\PY{p}{(}\PY{n}{T\PYZus{}init}\PY{p}{,} \PY{n}{k}\PY{p}{,} \PY{n}{volume}\PY{p}{,} \PY{n}{t\PYZus{}end}\PY{p}{)}
+                 \PY{n}{results} \PY{o}{=} \PY{n}{run\PYZus{}simulation}\PY{p}{(}\PY{n}{coffee}\PY{p}{,} \PY{n}{update\PYZus{}func}\PY{p}{)}
+                 \PY{n}{sweep}\PY{p}{[}\PY{n}{coffee}\PY{o}{.}\PY{n}{T\PYZus{}init}\PY{p}{]} \PY{o}{=} \PY{n}{coffee\PYZus{}final}\PY{p}{(}\PY{n}{results}\PY{p}{)}
+             \PY{k}{return} \PY{n}{sweep}
 \end{Verbatim}
 
 
-    \hypertarget{simulating-the-initial-wolf-population-explosion}{%
-\subsubsection{Simulating the Initial Wolf Population
-Explosion}\label{simulating-the-initial-wolf-population-explosion}}
+    To test our results we can run our function and plot the results.
 
     \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}159}]:} \PY{n}{system} \PY{o}{=} \PY{n}{System}\PY{p}{(}\PY{n}{t\PYZus{}0}\PY{o}{=}\PY{n}{t\PYZus{}0}\PY{p}{,} 
-                          \PY{n}{t\PYZus{}end}\PY{o}{=}\PY{n}{t\PYZus{}end}\PY{p}{,}
-                          \PY{n}{p\PYZus{}0}\PY{o}{=}\PY{n}{p\PYZus{}0}\PY{p}{,}
-                          \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.8}\PY{p}{,}
-                          \PY{n}{beta}\PY{o}{=}\PY{o}{\PYZhy{}}\PY{l+m+mf}{0.006}\PY{p}{)}
-          
-          \PY{n}{results} \PY{o}{=} \PY{n}{run\PYZus{}simulation}\PY{p}{(}\PY{n}{system}\PY{p}{,} \PY{n}{update\PYZus{}func\PYZus{}quad}\PY{p}{)}
-          \PY{n}{plot}\PY{p}{(}\PY{n}{results}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Wolves}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-          \PY{n}{plot}\PY{p}{(}\PY{n}{wolves}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZhy{}\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{True Population}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+{\color{incolor}In [{\color{incolor}15}]:} \PY{n}{init\PYZus{}Temp} \PY{o}{=} \PY{n}{sweep\PYZus{}T}\PY{p}{(}\PY{n}{T\PYZus{}array}\PY{p}{,} \PY{n}{k}\PY{p}{)}
 \end{Verbatim}
 
 
 \begin{Verbatim}[commandchars=\\\{\}]
-{\color{outcolor}Out[{\color{outcolor}159}]:} [<matplotlib.lines.Line2D at 0x1a2681e9e8>]
+{\color{outcolor}Out[{\color{outcolor}15}]:} 60     25.080436
+         65     25.590906
+         70     26.101376
+         75     26.611846
+         80     27.122316
+         85     27.632786
+         90     28.143256
+         95     28.653726
+         100    29.164196
+         dtype: float64
 \end{Verbatim}
             
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}16}]:} \PY{n}{label} \PY{o}{=} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k = }\PY{l+s+s1}{\PYZsq{}} \PY{o}{+} \PY{n+nb}{str}\PY{p}{(}\PY{n}{k}\PY{p}{)}
+         \PY{n}{plot}\PY{p}{(}\PY{n}{init\PYZus{}Temp}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{n}{label}\PY{p}{)}
+         
+         \PY{n}{decorate}\PY{p}{(}\PY{n}{xlabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Initial Temperature (degrees Celsius)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                  \PY{n}{ylabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Final Temperature}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+
+
     \begin{center}
-    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_12_1.png}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_34_0.png}
     \end{center}
     { \hspace*{\fill} \\}
     
+    \hypertarget{results-2}{%
+\subsection{Results 2}\label{results-2}}
+
+As you can see, the higher the initial temperature, the higher the final
+temperature of the coffee. With a constant \texttt{k} value of 0.033,
+the highest possible initial temperature (since water boils at 100
+degrees Celsius) still won't produce a high enough final temperature.
+Additionally, it is unfeasible to carry around extremely hot coffee,
+since the chance of spilling and burning yourself are high. Therefore,
+we should look at other ways to produce higher final temperatures.
+
+    \hypertarget{sweeping-t_init-and-k}{%
+\paragraph{Sweeping T\_init and k}\label{sweeping-t_init-and-k}}
+
+From here, we can sweep \emph{k} as well and use a SweepFrame to store
+our results. By changing the rate of heat transfer, \texttt{k}, we can
+also attempt to end our simulation with a better final temperature.
+
     \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}148}]:} \PY{n}{system2} \PY{o}{=} \PY{n}{System}\PY{p}{(}\PY{n}{t\PYZus{}0}\PY{o}{=}\PY{n}{t\PYZus{}0}\PY{p}{,} 
-                          \PY{n}{t\PYZus{}end}\PY{o}{=}\PY{n}{t\PYZus{}end}\PY{p}{,}
-                          \PY{n}{p\PYZus{}0}\PY{o}{=}\PY{l+m+mi}{5}\PY{p}{,}
-                          \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.8}\PY{p}{,}
-                          \PY{n}{beta}\PY{o}{=}\PY{o}{\PYZhy{}}\PY{l+m+mf}{0.006}\PY{p}{)}
-          
-          \PY{n}{results} \PY{o}{=} \PY{n}{run\PYZus{}simulation}\PY{p}{(}\PY{n}{system2}\PY{p}{,} \PY{n}{update\PYZus{}func\PYZus{}quad}\PY{p}{)}
-          \PY{n}{plot}\PY{p}{(}\PY{n}{results}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Simulated Population}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-          \PY{n}{plot}\PY{p}{(}\PY{n}{wolves}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZhy{}\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{True Population}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+{\color{incolor}In [{\color{incolor}17}]:} \PY{k}{def} \PY{n+nf}{sweep\PYZus{}parameters}\PY{p}{(}\PY{n}{T\PYZus{}array}\PY{p}{,} \PY{n}{k\PYZus{}array}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Sweep a range of values for T\PYZus{}init and k.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    T\PYZus{}array: array of initial temperatures}
+         \PY{l+s+sd}{    k\PYZus{}array: array of heat transfer rates}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    returns: SweepFrame with one row for each T\PYZus{}init}
+         \PY{l+s+sd}{             and one column for each k}
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{n}{frame} \PY{o}{=} \PY{n}{SweepFrame}\PY{p}{(}\PY{n}{columns}\PY{o}{=}\PY{n}{k\PYZus{}array}\PY{p}{)}
+             \PY{k}{for} \PY{n}{k} \PY{o+ow}{in} \PY{n}{k\PYZus{}array}\PY{p}{:}
+                 \PY{n}{frame}\PY{p}{[}\PY{n}{k}\PY{p}{]} \PY{o}{=} \PY{n}{sweep\PYZus{}T}\PY{p}{(}\PY{n}{T\PYZus{}array}\PY{p}{,} \PY{n}{k}\PY{p}{)}
+             \PY{k}{return} \PY{n}{frame}
+\end{Verbatim}
+
+
+    And the results:
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}18}]:} \PY{n}{T\PYZus{}array} \PY{o}{=} \PY{n}{linspace}\PY{p}{(}\PY{l+m+mi}{60}\PY{p}{,} \PY{l+m+mi}{100}\PY{p}{,} \PY{l+m+mi}{9}\PY{p}{)}
+         \PY{n}{k\PYZus{}array} \PY{o}{=} \PY{n}{linspace}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{o}{.}\PY{l+m+mi}{05}\PY{p}{,} \PY{l+m+mi}{6}\PY{p}{)}
+         \PY{n}{frame} \PY{o}{=} \PY{n}{sweep\PYZus{}parameters}\PY{p}{(}\PY{n}{T\PYZus{}array}\PY{p}{,} \PY{n}{k\PYZus{}array}\PY{p}{)}
+         \PY{n}{frame}\PY{o}{.}\PY{n}{head}\PY{p}{(}\PY{p}{)}
+         \PY{c+c1}{\PYZsh{}two parameter sweep}
 \end{Verbatim}
 
 
 \begin{Verbatim}[commandchars=\\\{\}]
-{\color{outcolor}Out[{\color{outcolor}148}]:} [<matplotlib.lines.Line2D at 0x1a26004f28>]
+{\color{outcolor}Out[{\color{outcolor}18}]:}     0.00       0.01       0.02       0.03       0.04       0.05
+         60  60.0  40.745012  30.954895  26.011352  23.532600  22.298620
+         65  65.0  43.269442  32.220631  26.641508  23.844069  22.451438
+         70  70.0  45.793871  33.486367  27.271663  24.155537  22.604257
+         75  75.0  48.318301  34.752103  27.901819  24.467005  22.757075
+         80  80.0  50.842730  36.017839  28.531975  24.778474  22.909893
 \end{Verbatim}
             
-    \begin{center}
-    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_13_1.png}
-    \end{center}
-    { \hspace*{\fill} \\}
-    
     \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}154}]:} \PY{n}{system} \PY{o}{=} \PY{n}{System}\PY{p}{(}\PY{n}{t\PYZus{}0}\PY{o}{=}\PY{n}{t\PYZus{}0}\PY{p}{,} 
-                          \PY{n}{t\PYZus{}end}\PY{o}{=}\PY{n}{t\PYZus{}end}\PY{p}{,}
-                          \PY{n}{p\PYZus{}0}\PY{o}{=}\PY{l+m+mi}{250}\PY{p}{,}
-                          \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.8}\PY{p}{,}
-                          \PY{n}{beta}\PY{o}{=}\PY{o}{\PYZhy{}}\PY{l+m+mf}{0.006}\PY{p}{)}
-          
-          \PY{n}{results} \PY{o}{=} \PY{n}{run\PYZus{}simulation}\PY{p}{(}\PY{n}{system}\PY{p}{,} \PY{n}{update\PYZus{}func\PYZus{}quad}\PY{p}{)}
-          \PY{n}{plot}\PY{p}{(}\PY{n}{results}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{:}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Simulated Population}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-          \PY{n}{plot}\PY{p}{(}\PY{n}{wolves}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZhy{}\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{True Population}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+{\color{incolor}In [{\color{incolor}19}]:} \PY{n}{frame}\PY{o}{.}\PY{n}{tail}\PY{p}{(}\PY{p}{)}
+         \PY{c+c1}{\PYZsh{}two parameter sweep}
 \end{Verbatim}
 
 
 \begin{Verbatim}[commandchars=\\\{\}]
-{\color{outcolor}Out[{\color{outcolor}154}]:} [<matplotlib.lines.Line2D at 0x1a2622df28>]
+{\color{outcolor}Out[{\color{outcolor}19}]:}       0.00       0.01       0.02       0.03       0.04       0.05
+         80    80.0  50.842730  36.017839  28.531975  24.778474  22.909893
+         85    85.0  53.367159  37.283575  29.162131  25.089942  23.062711
+         90    90.0  55.891589  38.549311  29.792287  25.401410  23.215530
+         95    95.0  58.416018  39.815047  30.422442  25.712879  23.368348
+         100  100.0  60.940448  41.080783  31.052598  26.024347  23.521166
 \end{Verbatim}
             
+    And to plot the results:
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}20}]:} \PY{k}{for} \PY{n}{k} \PY{o+ow}{in} \PY{n}{k\PYZus{}array}\PY{p}{:}
+             \PY{n}{label} \PY{o}{=} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k = }\PY{l+s+s1}{\PYZsq{}} \PY{o}{+} \PY{n+nb}{str}\PY{p}{(}\PY{n}{k}\PY{p}{)}
+             \PY{n}{plot}\PY{p}{(}\PY{n}{frame}\PY{p}{[}\PY{n}{k}\PY{p}{]}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{n}{label}\PY{p}{)}
+             
+         \PY{n}{decorate}\PY{p}{(}\PY{n}{xlabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Starting Temp. (C)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                  \PY{n}{ylabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Final Temp (C)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                  \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}
+         \PY{c+c1}{\PYZsh{}plot of two parameter sweep}
+\end{Verbatim}
+
+
     \begin{center}
-    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_14_1.png}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_42_0.png}
     \end{center}
     { \hspace*{\fill} \\}
     
+    \hypertarget{results-3}{%
+\subsection{Results 3}\label{results-3}}
+
+Changing the rate of heat transfer has a huge impact on the final
+temperature, especially when used alongside different starting
+temperatures. Based on these results, we can see that lower \texttt{k}
+values have better effects on the final temperature of the coffee.
+Looking at the results, \texttt{k} values of 0.02 and lower can, at
+different initial temperatures result in final coffee temperatures that
+are more suitable for drinking.
+
+    \hypertarget{interpretation}{%
+\subsection{Interpretation}\label{interpretation}}
+
+The temperature range that is suggested to be best for drinking coffee
+lies between 40 and 60 degrees Celsius (around 100 to 140 F), depending
+on each person's personal preference. The recommended serving
+temperature for coffee is between 70 and 85 degrees Celsius (around 160
+to 185 F).
+
+To meet this requirement with a coffee cup with a k value of 0.03, which
+was our original k value, the initial temperature has to be almost 100
+degrees Celsius which is the boiling temperature of water. Not only is
+this unfeasible, but coffee that hot would be dangerous to carry around
+since it would be very easy to burn oneself.
+
+Comparatively, having a cup with a k value of 0.01 allows for an initial
+temperature of 80 C or higher and produces a final temperature between
+50 C and 60 C.
+
+    No model is perfect, and ours certainly had a fair amount of failings.
+
+First of all, we had hoped to see a change in the cooling of the coffee
+based on the change in location. While a difference does exist, it is
+barely noticeable and all we can see is a general decrease in
+temperature over time. This short falling was able to be ignored in the
+larger scheme of things, since our question depended more on the
+eventual final temperature of the coffee after a significant decrease in
+temperature had occurred.
+
+Another alteration we had to make to the model occurred when we began
+sweeping parameters. Originally, we had intended to only sweep for the
+initial temperature. This proved to be too simple of a model and didn't
+allow for the question to be answered based on the k value we originally
+had as a constant. To solve this, we added a second parameter sweep.
+
+Throughout the project, iteration played an important role in our
+modeling process. We used a few different ways of writing the code,
+using some later iterations to condense it in a neater and less unwieldy
+form. We also used different iterations of our code to choose the best
+ranges for sweeping the initial temperature and k values so that the
+model wasn't cluttered with too much data and made sense.
+
+    \hypertarget{abstract}{%
+\subsection{Abstract}\label{abstract}}
+
+In this project, we asked how warm should you make your coffee, knowing
+that you aren't going to drink it until you get to the AC and that
+you'll be in the Nord for an hour beforehand, and instead of making your
+coffee hotter, could you change the \emph{k} value to get the same
+results?
+
+We found that with an initial temperature of 70 degrees Celsius and a k
+value of 0.033, the coffee was too cold to drink after the set time
+period. The following graph shows the original loss in temperature
+before sweeping any parameters.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}21}]:} \PY{n}{plot}\PY{p}{(}\PY{n}{results}\PY{o}{.}\PY{n}{T}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{coffee}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+         \PY{n}{decorate}\PY{p}{(}\PY{n}{xlabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Time (minutes)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                  \PY{n}{ylabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Temperature (C)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_47_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    When we swept the initial temperature, we found that the highest
+possible initial temperatures (100 C) didn't produce final temperatures
+that were warm enough. At an initial temperature of 100 C (boiling point
+of water) the final temperature is just over 29 C as shown in the graph
+below.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}22}]:} \PY{n}{label} \PY{o}{=} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k = }\PY{l+s+s1}{\PYZsq{}} \PY{o}{+} \PY{n+nb}{str}\PY{p}{(}\PY{n}{k}\PY{p}{)}
+         \PY{n}{plot}\PY{p}{(}\PY{n}{init\PYZus{}Temp}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{n}{label}\PY{p}{)}
+         
+         \PY{n}{decorate}\PY{p}{(}\PY{n}{xlabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Initial Temperature (degrees Celsius)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                  \PY{n}{ylabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Final Temperature}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_49_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    Our final parameter sweep, which swept both initial temperature and k
+value better answered our question. The following graph indicates our
+results.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}23}]:} \PY{k}{for} \PY{n}{k} \PY{o+ow}{in} \PY{n}{k\PYZus{}array}\PY{p}{:}
+             \PY{n}{label} \PY{o}{=} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k = }\PY{l+s+s1}{\PYZsq{}} \PY{o}{+} \PY{n+nb}{str}\PY{p}{(}\PY{n}{k}\PY{p}{)}
+             \PY{n}{plot}\PY{p}{(}\PY{n}{frame}\PY{p}{[}\PY{n}{k}\PY{p}{]}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{n}{label}\PY{p}{)}
+             
+         \PY{n}{decorate}\PY{p}{(}\PY{n}{xlabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Starting Temp. (C)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                  \PY{n}{ylabel}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Final Temp (C)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                  \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}
+\end{Verbatim}
+
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_51_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    As shown, to have a final coffee temperature that is warm enough to
+drink, a k value of 0.01 or less would be needed along with an initial
+temperature of at least 80 degrees Celsius.
+
 
     % Add a bibliography block to the postdoc
     
